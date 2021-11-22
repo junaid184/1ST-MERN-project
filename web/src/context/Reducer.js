@@ -1,5 +1,3 @@
-
-
 export const reducer = (state, action) => {
   switch (action.type) {
 
@@ -7,7 +5,6 @@ export const reducer = (state, action) => {
       if (
         action.payload.fullName &&
         action.payload.email &&
-        action.payload.address &&
         action.payload._id) {
 
         return { ...state, user: action.payload }

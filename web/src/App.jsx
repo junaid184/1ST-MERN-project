@@ -34,7 +34,7 @@ function App(){
         dispatch({
           type: 'USER_LOGIN',
           payload:{
-            name: res.data.fullName,
+            fullName: res.data.fullName,
             email: res.data.email,
             _id: res.data._id
           }
