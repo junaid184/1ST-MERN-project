@@ -1,5 +1,4 @@
 import express from "express";
-const PORT = process.env.PORT || 8000;
 const app = express();
 import cors from "cors"
 import path from "path";
@@ -9,12 +8,15 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import postmark from "postmark"
 const SECRET = process.env.SECRET || "12345";
+const POSTMARK_KEY = process.env.POSTMARK_KEY || "b62230d6-744d-4a8a-9f41-d30e11819f1c";
+const PORT = process.env.PORT || 8000;
+
 // const dbURL = 'mongodb+srv://INNO:Inno@cluster0.nr4e4.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 const dbURL =
   "mongodb+srv://junaid:Junaid@cluster0.syy28.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 import mongoose from "mongoose";
-import { isObject } from "util";
 mongoose.connect(dbURL);
 const USER = mongoose.model("Users", {
   fullName: String,
@@ -26,6 +28,14 @@ const USER = mongoose.model("Users", {
     default: Date.now,
   },
 });
+
+const Otp = mongoose.model('Otp', {
+  email: String,
+  otp: String,
+  used: { type: Boolean, default: false },
+  created: { type: Date, default: Date.now },
+});
+
 const Post = mongoose.model("Posts", {
     fullName: String,
     email: String,
@@ -130,6 +140,131 @@ app.post("/api/v1/signup", (req, res) => {
     });
   }
 });
+
+app.post('/api/v1/otp', (req, res, next) => {
+
+  if (!req.body.email) {
+      console.log("required field missing");
+      res.status(403).send("required field missing");
+      return;
+  }
+  console.log("req.body: ", req.body);
+
+  USER.findOne({ email: req.body.email }, (err, user) => {
+
+      if (err) {
+          res.status(500).send("error in getting database")
+      } else {
+          if (user) {
+
+              function getRandomArbitrary(min, max) {
+                  return Math.random() * (max - min) + min;
+              }
+              const otp = getRandomArbitrary(1111, 9999).toFixed(0);
+
+              stringToHash(otp).then(hash => {
+
+                  let newOtp = new Otp({
+                      email: req.body.email,
+                      otp: hash
+                  })
+                  newOtp.save((err, saved) => {
+                      if (!err) {
+
+                          client.sendEmail({
+                              "From": "junaid.12194@iqra.edu.pk",
+                              "To": req.body.email,
+                              "Subject": "forget password OTP",
+                              "TextBody": `Hi ${user.fullName}, your 4 digit OTP is: ${otp}`
+                          }).then((success, error) => {
+                              if (!success) {
+                                  console.log("postmark error: ", error)
+                              }
+                          });
+
+                          res.send({ otpSent: true, message: "otp genrated" });
+                      } else {
+                          console.log("error: ", err);
+                          res.status(500).send("error saving otp on server")
+                      }
+                  })
+              })
+
+          } else {
+              res.send("user not found");
+          }
+      }
+  })
+})
+
+app.post('/api/v1/forget',(req, res, next)=>{
+  if(!req.body.email || !req.body.otp || !req.body.newPassword)
+  {
+    res.send(403).send('field is missing')
+    return;
+  }
+  else
+  {
+    Otp.findOne({email: req.body.email})
+    .sort({_id: -1})
+    .exec((e, otp)=>{
+      if(e)
+      {
+        res.status(500).send('error in getting otp')
+      }
+      else if(otp)
+      {
+        const created = new Date(otp.created).getTime;
+        const now = new Date().getTime;
+        const diff = now-created;
+
+        if(diff>300000 || otp.used)
+        {
+          res.status(401).send('otp invalid');
+        }
+        else
+        {
+          varifyHash(req.body.otp, otp.otp).then((isMatch)=>{
+            if(isMatch)
+            {
+              stringToHash(req.body.newPassword).then((hashPassword)=>{
+                USER.findOneAndUpdate({email: req.body.email}, 
+                  {password: hashPassword},
+                  {},
+                  (e, updated)=>{
+                    if(e)
+                    {
+                      res.status(500).send('error updating password')
+                    }
+                    else{
+                      res.send('password updated');
+                    }
+                  })
+              })
+              otp.update({used: true})
+              .exed((e, updated)=>{
+                if(e)
+                {
+                  console.log("otp update fail: ", e);
+                }
+                else{
+                  console.log('otp updated')
+                }
+              })
+            }
+            else{
+              res.status(401).send('invalid otp');
+            }
+          })
+        }
+      }
+      else
+      {
+        res.status(400).send('invalid otp')
+      }
+    })
+  }
+})
 
 app.use((req, res, next) => {
   jwt.verify(req.cookies.token, SECRET, (err, decoded) => {
