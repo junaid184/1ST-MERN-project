@@ -14,7 +14,6 @@ const SECRET = process.env.SECRET || "12345";
 const dbURL =
   "mongodb+srv://junaid:Junaid@cluster0.syy28.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 import mongoose from "mongoose";
-import { isObject } from "util";
 mongoose.connect(dbURL);
 const USER = mongoose.model("Users", {
   fullName: String,
