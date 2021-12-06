@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
+
 const SECRET = process.env.SECRET || "12345";
 const PORT = process.env.PORT || 8000;
 
@@ -32,6 +33,7 @@ const Post = mongoose.model("Posts", {
     email: String,
     postText: String,
     userId: String,
+    URL: String,
     created: {
     type: Date,
     default: Date.now,
