@@ -1,4 +1,5 @@
 import express from "express";
+import morgan from "morgan";
 const app = express();
 import cors from "cors";
 import path from "path";
@@ -23,12 +24,12 @@ dotenv.config();
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.ADMIN_APIKEY,
-  authDomain: process.env.AUTHDOMAIN,
-  projectId: process.env.PROJECTID,
-  storageBucket: process.env.STORAGEBUCKET,
-  messagingSenderId: process.env.MESSAGINGSENDERID,
-  appId: process.env.APPID,
+  apiKey: "AIzaSyBpNllUq4kLNYzsSOBstf15X2jsaHU1bKI",
+  authDomain: "owlkids-af985.firebaseapp.com",
+  projectId: "owlkids-af985",
+  storageBucket: "owlkids-af985.appspot.com",
+  messagingSenderId: "176162046515",
+  appId: "1:176162046515:web:24a7dc40b803a327f55946",
 };
 const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
@@ -73,6 +74,7 @@ const Post = mongoose.model("Posts", {
     default: Date.now,
   },
 });
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -287,7 +289,7 @@ app.post("/api/v1/post", upload.any(), async (req, res) => {
               imgStrPath: req.files[0].filename,
             });
             newpost.save().then((data) => {
-              io.emit("NEWPOSTS", {
+              io.emit("POSTS", {
                 postText: req.body.postText,
                 Url: downloadURL,
                 imgStrPath: req.files[0].filename,

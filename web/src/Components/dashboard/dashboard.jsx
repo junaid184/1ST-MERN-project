@@ -91,20 +91,17 @@ function Dashboard() {
             formData.append('File', fileInput);
             formData.append('text', inputText);
             formData.append('FullName', state.user.fullName);
-            formData.append('id', state.user.id);
+            formData.append('id', state.user._id);
             formData.append('name', 'user');
             formData.append('details', JSON.stringify({
                 subject: "user post",
                 year: "2021"
             }))
-            axios.post({
+            axios({
                 method: 'post',
                 data: formData,
                 headers: { "Content-Type": "multipart/form-data" },
-                url: `${baseURL}/api/v1/post`
-            }, {
-                postText: inputText
-            }, {
+                url: `${baseURL}/api/v1/post`,
                 withCredentials: true
             })
                 .then((res) => {
