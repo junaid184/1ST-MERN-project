@@ -16,7 +16,7 @@ import io from 'socket.io-client';
 const dev = 'http://localhost:8000';
 const baseURL = window.location.hostname.split(':')[0] === 'localhost' ? dev : ""
 
-function Copyright(){
+function Copyright() {
     return (
         <Typography varient='body2' color="text.secondary" align='center'>
             {'Copyright © '}
@@ -29,10 +29,10 @@ function Copyright(){
     )
 }
 const theme = createTheme();
-function Dashboard(){
+function Dashboard() {
     const [inputText, setInputText] = useState("");
     let { state, dispatch } = useContext(GlobalContext);
-
+    const [fileInput, setFileInput] = useState("");
     const [posts, setPosts] = useState([])
     const [refresh, setRefresh] = useState(false)
     const [isMore, setIsMore] = useState(true)
@@ -85,8 +85,24 @@ function Dashboard(){
 
 
     const submit = () => {
-        if (inputText !== "") {
-            axios.post(`${baseURL}/api/v1/post`, {
+        if (inputText !== "" && fileInput) {
+
+            var formData = new FormData();
+            formData.append('File', fileInput);
+            formData.append('text', inputText);
+            formData.append('FullName', state.user.fullName);
+            formData.append('id', state.user.id);
+            formData.append('name', 'user');
+            formData.append('details', JSON.stringify({
+                subject: "user post",
+                year: "2021"
+            }))
+            axios.post({
+                method: 'post',
+                data: formData,
+                headers: { "Content-Type": "multipart/form-data" },
+                url: `${baseURL}/api/v1/post`
+            }, {
                 postText: inputText
             }, {
                 withCredentials: true
@@ -97,83 +113,95 @@ function Dashboard(){
                     // alert("post created");
 
                 })
+                .catch((error) => {
+                    console.log(error.message);
+                })
         }
     }
-    return(
+    return (
         <ThemeProvider theme={theme}>
-        <CssBaseline/>
-        <main>
-            <Box
-                sx = {{
-                    bgcolor: 'background.paper',
-                    pt: 8,
-                    pb: 6
-                }}
-            >
-                <Container maxWidth="sm">
-                    <Typography
-                        component="h5"
-                        variant="h4"
-                        align="center"
-                        color="text.primary"
-                        gutterBottom
-                    >
-                        Dashboard Page
-                    </Typography>
-                    <TextField
-                    fullWidth
-                    id="outlined-multiline-static"
-                    multiline
-                    rows={4}
-                    value={inputText}
-                    onChange={(e) => {
-                        setInputText(e.target.value)
+            <CssBaseline />
+            <main>
+                <Box
+                    sx={{
+                        bgcolor: 'background.paper',
+                        pt: 8,
+                        pb: 6
                     }}
-                    placeholder="What's in your mind"
-                /> 
-                <br />
-                    <Button fullWidth variant="contained" onClick={submit}>Post</Button>
-                    <Stack
-                        sx={{ pt: 4 }}
-                        direction="row"
-                        spacing={2}
-                        justifyContent="center"
-                    >
-                    </Stack>
-                    
-                    <br/>
-                    {posts.map((eachPost, index) => (
-                        <Post key={index} name={eachPost.fullName} email={eachPost.email} text={eachPost.postText} />
-                    ))}
+                >
+                    <Container maxWidth="sm">
+                        <Typography
+                            component="h5"
+                            variant="h4"
+                            align="center"
+                            color="text.primary"
+                            gutterBottom
+                        >
+                            Dashboard Page
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            id="outlined-multiline-static"
+                            multiline
+                            rows={4}
+                            value={inputText}
+                            onChange={(e) => {
+                                setInputText(e.target.value)
+                            }}
+                            placeholder="What's in your mind"
+                        />
+                        <TextField
+                            fullWidth
+                            type="file"
+                            onChange={(e) => setFileInput(e.target.files[0])}
+                            accept="image/*"
+                            name="fileInput"
+                            id="fileInput"
+                            required
+                        />
+                        <br />
+                        <Button fullWidth variant="contained" onClick={submit}>Post</Button>
+                        <Stack
+                            sx={{ pt: 4 }}
+                            direction="row"
+                            spacing={2}
+                            justifyContent="center"
+                        >
+                        </Stack>
 
-                   {/* {
+                        <br />
+                        {posts.map((eachPost, index) => (
+                            <Post key={index} name={eachPost.fullName} email={eachPost.email} text={eachPost.postText} img={eachPost.postUrl} />
+                        ))}
+
+                        {/* {
                        JSON.stringify(posts)
                    } */}
 
-                   <br/>    
+                        <br />
 
-                   {(isMore) ? <Button onClick={loadMore}>Load More ...</Button> : null}
+                        {(isMore) ? <Button onClick={loadMore}>Load More ...</Button> : null}
 
-                </Container>
+                    </Container>
+                </Box>
+            </main>
+
+            {/* Footer */}
+            <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">
+                <Typography variant="h6" align="center" gutterBottom>
+                    Footer
+                </Typography>
+                <Typography
+                    variant="subtitle1"
+                    align="center"
+                    color="text.secondary"
+                    component="p"
+                >
+                    Something here to give the footer a purpose!
+                </Typography>
+                <Copyright />
             </Box>
-        </main>
-
-        {/* Footer */}
-        <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">
-        <Typography variant="h6" align="center" gutterBottom>
-                Footer
-            </Typography>
-            <Typography
-                variant="subtitle1"
-                align="center"
-                color="text.secondary"
-                component="p"
-            >
-                Something here to give the footer a purpose!
-            </Typography>
-            <Copyright />
-        </Box>
-    </ThemeProvider>
+        </ThemeProvider>
     )
 }
 

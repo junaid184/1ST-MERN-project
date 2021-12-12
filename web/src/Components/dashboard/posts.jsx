@@ -11,7 +11,7 @@ import { red } from '@mui/material/colors';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ShareIcon from '@mui/icons-material/Share';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-
+import CardMedia from '@mui/material/CardMedia';
 const ExpandMore = styled((props) => {
     const { expand, ...other } = props;
     return <IconButton {...other} />;
@@ -24,7 +24,7 @@ const ExpandMore = styled((props) => {
 }));
 
 export default function RecipeReviewCard(props) {
-    const { text, email, name, timestamp } = props;
+    const { text, email, name, timestamp, img } = props;
     const [expanded, setExpanded] = React.useState(false);
 
     const handleExpandClick = () => {
@@ -46,9 +46,14 @@ export default function RecipeReviewCard(props) {
                 }
                 title={name}
                 subheader={email}
-                
+
             />
-            
+            <CardMedia
+                component="img"
+                height="194"
+                image={img}
+                alt="Paella dish"
+            />
             <CardContent>
                 <Typography variant="body2" color="text.secondary">
                     {text}
@@ -62,7 +67,7 @@ export default function RecipeReviewCard(props) {
                     <ShareIcon />
                 </IconButton>
             </CardActions>
-            
+
         </Card>
     );
 }
