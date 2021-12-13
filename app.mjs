@@ -116,7 +116,7 @@ app.post("/api/v1/login", (req, res) => {
 
               res.cookie("token", token, {
                 httpOnly: true,
-                maxAge: 300000,
+                maxAge: 86400000,
               });
 
               res.send({
@@ -210,22 +210,6 @@ app.get("/api/v1/profile", (req, res) => {
 });
 
 app.post("/api/v1/post", upload.any(), async (req, res) => {
-  // const newPost = new Post({
-  //   fullName: req.body._decoded.fullName,
-  //   email: req.body._decoded.email,
-  //   postText: req.body.postText,
-  //   userId: req.body._decoded._id,
-  // });
-  // newPost.save().then(() => {
-  //   console.log("Post Created");
-  //   io.emit("POSTS", {
-  //     fullName: req.body._decoded.fullName,
-  //     email: req.body._decoded.email,
-  //     postText: req.body.postText,
-  //     userId: req.body._decoded._id,
-  //   });
-  //   res.send("Post Created");
-  // });
   if (!req.files || !req.body.text) {
     res.status(400).send("file is missing");
     return;
@@ -261,9 +245,11 @@ app.post("/api/v1/post", upload.any(), async (req, res) => {
         switch (error.code) {
           case "storage/unauthorized":
             // User doesn't have permission to access the object
+            console.log("User doesn't have permission to access the object");
             break;
           case "storage/canceled":
             // User canceled the upload
+            console.log("user canceled the upload");
             break;
 
           // ...
@@ -281,21 +267,21 @@ app.post("/api/v1/post", upload.any(), async (req, res) => {
             await unlink(req.files[0].path);
             console.log("File Deleted");
             const newpost = await new Post({
-              fullName: req.body._decoded.fullName,
+              fullName: req.body.fullName,
               email: req.body._decoded.email,
               postText: req.body.postText,
-              userId: req.body._decoded._id,
+              userId: req.body._id,
               URL: downloadURL,
               imgStrPath: req.files[0].filename,
             });
             newpost.save().then((data) => {
               io.emit("POSTS", {
-                postText: req.body.postText,
+                postText: req.body.text,
                 Url: downloadURL,
                 imgStrPath: req.files[0].filename,
-                fullName: req.body._decoded.fullName,
-                userId: req.body._decoded._id,
-                _id: data._id,
+                fullName: req.body.FullName,
+                userId: req.body.id,
+                _id: data.id,
               });
               res.send("Post created");
             });

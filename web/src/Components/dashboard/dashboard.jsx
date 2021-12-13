@@ -88,10 +88,10 @@ function Dashboard() {
         if (inputText !== "" && fileInput) {
 
             var formData = new FormData();
-            formData.append('File', fileInput);
-            formData.append('text', inputText);
-            formData.append('FullName', state.user.fullName);
-            formData.append('id', state.user._id);
+            formData.append('file', fileInput);
+            formData.append('postText', inputText);
+            formData.append('fullName', state.user.fullName);
+            formData.append('_id', state.user._id);
             formData.append('name', 'user');
             formData.append('details', JSON.stringify({
                 subject: "user post",
@@ -113,6 +113,9 @@ function Dashboard() {
                 .catch((error) => {
                     console.log(error.message);
                 })
+        }
+        else {
+            alert('fill allt the fields');
         }
     }
     return (
