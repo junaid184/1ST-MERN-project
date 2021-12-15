@@ -115,7 +115,7 @@ function Dashboard() {
                 })
         }
         else {
-            alert('fill allt the fields');
+            alert('fill all the fields');
         }
     }
     return (

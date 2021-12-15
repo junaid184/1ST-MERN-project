@@ -9,19 +9,17 @@ import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { readFile } from "fs/promises";
-import { unlink } from "fs/promises";
 import {
+  getStorage,
   ref,
   uploadBytesResumable,
-  deleteObject,
   getDownloadURL,
 } from "firebase/storage";
 import { initializeApp } from "firebase/app";
-import { getStorage } from "firebase/storage";
 import dotenv from "dotenv";
 dotenv.config();
 
+// Your web app's Firebase configuration
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBpNllUq4kLNYzsSOBstf15X2jsaHU1bKI",
@@ -31,6 +29,7 @@ const firebaseConfig = {
   messagingSenderId: "176162046515",
   appId: "1:176162046515:web:24a7dc40b803a327f55946",
 };
+
 const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
 import multer from "multer";
@@ -50,6 +49,8 @@ const PORT = process.env.PORT || 8000;
 const dbURL =
   "mongodb+srv://junaid:Junaid@cluster0.syy28.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 import mongoose from "mongoose";
+import { readFile } from "fs/promises";
+import { async } from "@firebase/util";
 mongoose.connect(dbURL);
 const USER = mongoose.model("Users", {
   fullName: String,
@@ -93,7 +94,6 @@ app.post("/api/v1/login", (req, res) => {
     console.log("email and password is required");
     res.status(403).send("required field is missing");
   }
-  console.log(req.body);
   USER.findOne({ email: req.body.email }, (err, user) => {
     if (err) {
       res.status(500).send("error in getting database");
@@ -210,46 +210,39 @@ app.get("/api/v1/profile", (req, res) => {
 });
 
 app.post("/api/v1/post", upload.any(), async (req, res) => {
-  if (!req.files || !req.body.text) {
+  if (!req.files || !req.body.postText) {
     res.status(400).send("file is missing");
     return;
-  }
-  if (req.files[0].size > 2000000) {
-    res.status(400).send("file size should not be greater than 2MB");
-    return;
-  }
-  try {
+  } else if (req.files[0].size > 20000) {
+    res.status(400).send("file size is greater than 2MB");
+  } else {
     const file = await readFile(req.files[0].path);
-    const storageRef = ref(storage, "postImages/" + req.files[0].filename);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
+    const storageRef = ref(storage, "postImage/" + req.files[0].filename);
+    console.log(storageRef);
+    let uploadTask = uploadBytesResumable(storageRef, file);
+    console.log(uploadTask);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
         const progress =
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         console.log("Upload is " + progress + "% done");
         switch (snapshot.state) {
           case "paused":
-            console.log("Upload is paused");
+            console.log("upload is paused");
             break;
           case "running":
-            console.log("Upload is running");
+            console.log("upload is running");
             break;
         }
       },
       (error) => {
-        // A full list of error codes is available at
-        // https://firebase.google.com/docs/storage/web/handle-errors
         switch (error.code) {
           case "storage/unauthorized":
             // User doesn't have permission to access the object
-            console.log("User doesn't have permission to access the object");
             break;
           case "storage/canceled":
             // User canceled the upload
-            console.log("user canceled the upload");
             break;
 
           // ...
@@ -260,40 +253,11 @@ app.post("/api/v1/post", upload.any(), async (req, res) => {
         }
       },
       () => {
-        // Upload completed successfully, now we can get the download URL
-        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-          console.log("File available at", downloadURL);
-          try {
-            await unlink(req.files[0].path);
-            console.log("File Deleted");
-            const newpost = await new Post({
-              fullName: req.body.fullName,
-              email: req.body._decoded.email,
-              postText: req.body.postText,
-              userId: req.body._id,
-              URL: downloadURL,
-              imgStrPath: req.files[0].filename,
-            });
-            newpost.save().then((data) => {
-              io.emit("POSTS", {
-                postText: req.body.text,
-                Url: downloadURL,
-                imgStrPath: req.files[0].filename,
-                fullName: req.body.FullName,
-                userId: req.body.id,
-                _id: data.id,
-              });
-              res.send("Post created");
-            });
-          } catch (error) {
-            console.log(error);
-            res.status(500).send("Error in storage");
-          }
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          console.log("file avalaible at: ", downloadURL);
         });
       }
     );
-  } catch (error) {
-    res.status(500).send("Internal Server Error");
   }
 });
 
