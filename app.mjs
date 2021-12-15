@@ -22,12 +22,13 @@ dotenv.config();
 // Your web app's Firebase configuration
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBpNllUq4kLNYzsSOBstf15X2jsaHU1bKI",
-  authDomain: "owlkids-af985.firebaseapp.com",
-  projectId: "owlkids-af985",
-  storageBucket: "owlkids-af985.appspot.com",
-  messagingSenderId: "176162046515",
-  appId: "1:176162046515:web:24a7dc40b803a327f55946",
+  apiKey: "AIzaSyC1NNBNfAlwfs8mWvMPcA6ycgJA7GY5DD0",
+  authDomain: "todoappication.firebaseapp.com",
+  databaseURL: "https://todoappication-default-rtdb.firebaseio.com",
+  projectId: "todoappication",
+  storageBucket: "todoappication.appspot.com",
+  messagingSenderId: "220292562540",
+  appId: "1:220292562540:web:f3e365f964c3f50816e249",
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
