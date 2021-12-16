@@ -42,7 +42,7 @@ function Dashboard() {
             withCredentials: true
         })
             .then((res) => {
-                console.log("res +++: ", res.data);
+
                 setPosts(res.data)
 
             })
@@ -58,7 +58,7 @@ function Dashboard() {
             console.log("disconnected from server: ", message);
         });
         socket.on('POSTS', function (data) {
-            console.log(data);
+
             setPosts((prev) => [data, ...prev])
         });
 
@@ -87,7 +87,7 @@ function Dashboard() {
                 withCredentials: true
             })
                 .then((res) => {
-                    console.log("res: ", res.data);
+
                     setRefresh(!refresh)
                     setInputText('');
                     setFileInput('');
@@ -108,7 +108,7 @@ function Dashboard() {
                 withCredentials: true
             })
             .then((res) => {
-                console.log("res +++: ", res.data);
+
                 if (res.data?.length) {
                     const newPosts = [...posts, ...res.data]
                     setPosts(newPosts)

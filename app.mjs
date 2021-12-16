@@ -212,7 +212,6 @@ app.get("/api/v1/profile", (req, res) => {
 });
 
 app.post("/api/v1/post", upload.any(), async (req, res) => {
-  console.log(req);
   if (!req.files || !req.body.postText) {
     res.status(400).send("file is missing");
     return;
@@ -221,9 +220,7 @@ app.post("/api/v1/post", upload.any(), async (req, res) => {
   } else {
     const file = await readFile(req.files[0].path);
     const storageRef = ref(storage, "postImage/" + req.files[0].filename);
-    console.log(storageRef);
     let uploadTask = uploadBytesResumable(storageRef, file);
-    console.log(uploadTask);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -259,6 +256,7 @@ app.post("/api/v1/post", upload.any(), async (req, res) => {
         getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
           console.log("file avalaible at: ", downloadURL);
           try {
+            console.log("file deleted");
             const newPost = await new Post({
               fullName: req.body.fullName,
               email: req.body.email,
