@@ -52,6 +52,7 @@ const dbURL =
 import mongoose from "mongoose";
 import { readFile } from "fs/promises";
 import { async } from "@firebase/util";
+import { unlink } from "fs";
 mongoose.connect(dbURL);
 const USER = mongoose.model("Users", {
   fullName: String,
@@ -211,6 +212,7 @@ app.get("/api/v1/profile", (req, res) => {
 });
 
 app.post("/api/v1/post", upload.any(), async (req, res) => {
+  console.log(req);
   if (!req.files || !req.body.postText) {
     res.status(400).send("file is missing");
     return;
@@ -254,8 +256,33 @@ app.post("/api/v1/post", upload.any(), async (req, res) => {
         }
       },
       () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
           console.log("file avalaible at: ", downloadURL);
+          try {
+            const newPost = await new Post({
+              fullName: req.body.fullName,
+              email: req.body.email,
+              postText: req.body.postText,
+              userId: req.body._id,
+              URL: downloadURL,
+              imgStrPath: req.files[0].filename,
+            });
+            newPost.save().then((data) => {
+              io.emit("POSTS", {
+                fullName: req.body.fullName,
+                email: req.body.email,
+                postText: req.body.postText,
+                userId: req.body._id,
+                URL: downloadURL,
+                imgStrPath: req.files[0].filename,
+                id: data.id,
+              });
+              res.send("Post Created");
+            });
+          } catch (error) {
+            console.log(error);
+            res.status(500).send("Error in storage");
+          }
         });
       }
     );

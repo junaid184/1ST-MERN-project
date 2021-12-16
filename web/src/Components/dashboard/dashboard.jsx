@@ -66,24 +66,6 @@ function Dashboard() {
             socket.close();
         };
     }, []);
-
-    const loadMore = () => {
-        axios.get(`${baseURL}/api/v1/posts?page=${posts.length}`,
-            {
-                withCredentials: true
-            })
-            .then((res) => {
-                console.log("res +++: ", res.data);
-                if (res.data?.length) {
-                    const newPosts = [...posts, ...res.data]
-                    setPosts(newPosts)
-                } else {
-                    setIsMore(false)
-                }
-            })
-    }
-
-
     const submit = () => {
         if (inputText !== "" && fileInput) {
 
@@ -107,6 +89,8 @@ function Dashboard() {
                 .then((res) => {
                     console.log("res: ", res.data);
                     setRefresh(!refresh)
+                    setInputText('');
+                    setFileInput('');
                     // alert("post created");
 
                 })
@@ -118,6 +102,24 @@ function Dashboard() {
             alert('fill all the fields');
         }
     }
+    const loadMore = () => {
+        axios.get(`${baseURL}/api/v1/posts?page=${posts.length}`,
+            {
+                withCredentials: true
+            })
+            .then((res) => {
+                console.log("res +++: ", res.data);
+                if (res.data?.length) {
+                    const newPosts = [...posts, ...res.data]
+                    setPosts(newPosts)
+                } else {
+                    setIsMore(false)
+                }
+            })
+    }
+
+
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -171,7 +173,7 @@ function Dashboard() {
 
                         <br />
                         {posts.map((eachPost, index) => (
-                            <Post key={index} name={eachPost.fullName} email={eachPost.email} text={eachPost.postText} img={eachPost.postUrl} />
+                            <Post key={index} name={eachPost.fullName} email={eachPost.email} text={eachPost.postText} img={eachPost.URL} />
                         ))}
 
                         {/* {
